@@ -1,0 +1,546 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missions BBQ Signs - Map</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        #map {
+            height: calc(100vh - 80px);
+        }
+
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .leaflet-popup-tip {
+            background: white;
+        }
+
+        /* Marker Styles */
+        .marker-pin {
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            border: 2px solid white;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .marker-pin div {
+            transform: rotate(45deg);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .status-need {
+            background: #ef4444;
+        }
+
+        /* Red */
+        .status-posted {
+            background: #22c55e;
+        }
+
+        /* Green */
+        .status-retrieved {
+            background: #94a3b8;
+        }
+
+        /* Slate/Gray */
+
+        .polygon-label {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .count-overlay {
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            color: #1e293b;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            width: auto !important;
+            height: auto !important;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            white-space: nowrap;
+            /* Prevents text from wrapping to a new line */
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 font-sans">
+
+    <header
+        class="h-20 flex items-center justify-between px-6 bg-white border-b border-slate-200 shadow-sm sticky top-0 z-[1000]">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-lg shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-slate-800 leading-none">Missions BBQ Signs</h1>
+                <div id="stats" class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Loading...
+                </div>
+                <div id="last-updated" class="text-[8px] font-medium text-slate-300 uppercase tracking-tight mt-1">Last
+                    Updated: Loading...</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="toggleOverlays()" id="overlay-toggle"
+                class="bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-black uppercase px-4 py-2.5 rounded-lg transition-all flex items-center gap-2">
+                Show Counts
+            </button>
+            <button onclick="locateUser()"
+                class="bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-black uppercase px-4 py-2.5 rounded-lg shadow-lg transition-all flex items-center gap-2">
+                Find Me
+            </button>
+            <button onclick="saveCurrentState()"
+                class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase px-4 py-2.5 rounded-lg shadow-lg transition-all flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Save State
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div id="map" class="w-full"></div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SYNC_URL = "https://script.google.com/macros/s/AKfycbyaRAWhjH6a_XBsV-6JWwVtFFOyBySi3MNV9eO8CfdcIxWbjrzAfke5hFP0m0lOeRUE/exec";
+
+        // State Management
+        let signData = [];
+        let markers = [];
+        let overlays = [];
+        let savedStatuses = {};
+        let showOverlays = false;
+
+        // Initialize Map
+        const map = L.map('map').setView([35.03, -80.70], 12);
+
+        // Define Icons
+        const getMarkerIcon = (status) => {
+            const statusClass = status === 'posted' ? 'status-posted' : (status === 'retrieved' ? 'status-retrieved' : 'status-need');
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="marker-pin ${statusClass}"><div></div></div>`,
+                iconSize: [30, 42],
+                iconAnchor: [15, 42],
+                popupAnchor: [0, -40]
+            });
+        };
+
+        const churchIcon = L.divIcon({
+            html: `
+                <div class="bg-blue-600 p-1.5 rounded-lg border-2 border-white shadow-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2L2 12h3v8h14v-8h3L12 2z M12 7v6 M10 9h4" />
+                    </svg>
+                </div>
+            `,
+            className: '',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // --- Functions ---
+
+        async function loadRemoteStatus() {
+            if (!SYNC_URL) {
+                savedStatuses = JSON.parse(localStorage.getItem('bbq_sign_statuses') || '{}');
+                return;
+            }
+            try {
+                document.getElementById('stats').textContent = "Syncing with Sheets...";
+                const response = await fetch(SYNC_URL);
+                const data = await response.json();
+
+                // Handle both array and object formats from Google Sheets
+                if (Array.isArray(data)) {
+                    savedStatuses = {};
+                    data.forEach(item => {
+                        if (item.id) savedStatuses[item.id] = item;
+                    });
+                } else {
+                    savedStatuses = data || {};
+                }
+
+                console.log("Status loaded from Google Sheets:", savedStatuses);
+                document.getElementById('stats').textContent = "Sync Complete";
+            } catch (e) {
+                console.error("Remote load failed, using local:", e);
+                savedStatuses = JSON.parse(localStorage.getItem('bbq_sign_statuses') || '{}');
+                document.getElementById('stats').textContent = "Offline Mode (Local)";
+            }
+        }
+
+        function updateSignStatus(id, newStatus) {
+            const sign = signData.find(s => s.id === id);
+            if (sign) {
+                sign.status = newStatus;
+                if (newStatus === 'retrieved') {
+                    sign.right = 0;
+                    sign.left = 0;
+                    sign.fri_sat = 0;
+                    sign.details = 0;
+                }
+
+                savedStatuses[id] = {
+                    id: id,
+                    status: sign.status,
+                    right: sign.right,
+                    left: sign.left,
+                    fri_sat: sign.fri_sat,
+                    details: sign.details
+                };
+
+                const marker = markers.find(m => m.options.id === id);
+                if (marker) {
+                    marker.setIcon(getMarkerIcon(newStatus));
+                    marker.setPopupContent(createPopupContent(sign));
+                }
+                updateStats();
+                if (showOverlays) refreshOverlays();
+            }
+        }
+
+        function updateSignCount(id, type, value) {
+            const sign = signData.find(s => s.id === id);
+            if (sign) {
+                sign[type] = parseInt(value) || 0;
+
+                savedStatuses[id] = {
+                    id: id,
+                    status: sign.status,
+                    right: sign.right,
+                    left: sign.left,
+                    fri_sat: sign.fri_sat,
+                    details: sign.details
+                };
+
+                const marker = markers.find(m => m.options.id === id);
+                if (marker) {
+                    marker.setPopupContent(createPopupContent(sign));
+                }
+                if (showOverlays) refreshOverlays();
+            }
+        }
+
+        async function saveCurrentState() {
+            localStorage.setItem('bbq_sign_statuses', JSON.stringify(savedStatuses));
+            if (!SYNC_URL) {
+                alert("Please add SYNC_URL to save to Sheets.");
+                return;
+            }
+            try {
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "Saving...";
+                btn.disabled = true;
+
+                await fetch(SYNC_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(savedStatuses)
+                });
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    alert("Saved to Google Sheets! Note: It may take a moment to reflect in the spreadsheet.");
+                    updateStats();
+                }, 1000);
+            } catch (e) {
+                alert("Save failed. See console.");
+                console.error(e);
+            }
+        }
+
+        function createPopupContent(sign) {
+            const googleMapsUrl = `https://www.google.com/maps?q=${sign.lat},${sign.lng}`;
+            const statusLabel = sign.status === 'posted' ? 'POSTED' : (sign.status === 'retrieved' ? 'RETRIEVED' : 'NEED');
+            const statusColor = sign.status === 'posted' ? 'text-green-600' : (sign.status === 'retrieved' ? 'text-slate-500' : 'text-red-600');
+
+            return `
+                <div class="p-0.5 space-y-2 w-48">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-1">
+                        <h3 class="text-slate-800 font-black text-[10px] uppercase tracking-tight">Sign #${sign.index + 1}</h3>
+                        <span class="text-[8px] font-black uppercase ${statusColor}">${statusLabel}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-1 text-[9px] font-bold text-slate-600 border-b border-slate-50 pb-2">
+                        <div class="flex items-center justify-between">
+                            <label>Right Arrow ➔</label>
+                            <input type="number" value="${sign.right}" onchange="updateSignCount('${sign.id}', 'right', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0.5 w-12 text-center">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label>Left Arrow ⬅</label>
+                            <input type="number" value="${sign.left}" onchange="updateSignCount('${sign.id}', 'left', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0.5 w-12 text-center">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label>Friday/Saturday</label>
+                            <input type="number" value="${sign.fri_sat}" onchange="updateSignCount('${sign.id}', 'fri_sat', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0.5 w-12 text-center">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label>Details</label>
+                            <input type="number" value="${sign.details}" onchange="updateSignCount('${sign.id}', 'details', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0.5 w-12 text-center">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-1 border-t border-slate-100 pt-1.5">
+                        <button onclick="updateSignStatus('${sign.id}', 'need')" class="text-left px-2 py-1 text-[8px] font-bold rounded border border-red-50 text-red-700 hover:bg-red-50 flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500 border border-white"></div> Need Posting
+                        </button>
+                        <button onclick="updateSignStatus('${sign.id}', 'posted')" class="text-left px-2 py-1 text-[8px] font-bold rounded border border-green-50 text-green-700 hover:bg-green-50 flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500 border border-white"></div> Posted
+                        </button>
+                        <button onclick="updateSignStatus('${sign.id}', 'retrieved')" class="text-left px-2 py-1 text-[8px] font-bold rounded border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full bg-slate-400 border border-white"></div> Retrieved & Reset
+                        </button>
+                    </div>
+
+                    <a href="${googleMapsUrl}" target="_blank" class="inline-block w-full text-center bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-600 text-[8px] font-black py-1 px-2 rounded-md transition-all uppercase tracking-widest shadow-sm">GOOGLE MAPS</a>
+                </div>
+            `;
+        }
+
+        function toggleOverlays() {
+            showOverlays = !showOverlays;
+            const btn = document.getElementById('overlay-toggle');
+            if (showOverlays) {
+                btn.textContent = "Hide Counts";
+                btn.classList.replace('bg-slate-100', 'bg-blue-600');
+                btn.classList.replace('text-slate-700', 'text-white');
+            } else {
+                btn.textContent = "Show Counts";
+                btn.classList.replace('bg-blue-600', 'bg-slate-100');
+                btn.classList.replace('text-white', 'text-slate-700');
+            }
+            refreshOverlays();
+        }
+
+        function refreshOverlays() {
+            // Remove old overlays
+            overlays.forEach(o => map.removeLayer(o));
+            overlays = [];
+
+            if (!showOverlays) return;
+
+            signData.forEach(sign => {
+                const total = (parseInt(sign.right) || 0) + (parseInt(sign.left) || 0) + (parseInt(sign.fri_sat) || 0) + (parseInt(sign.details) || 0);
+                if (total > 0) {
+                    const label = `
+                        <span>R: ${sign.right}</span>
+                        <span>L: ${sign.left}</span>
+                        <span>F/S: ${sign.fri_sat}</span>
+                        <span>D: ${sign.details}</span>
+                    `;
+
+                    const overlay = L.marker([sign.lat, sign.lng], {
+                        icon: L.divIcon({
+                            className: 'count-overlay',
+                            html: label,
+                            iconSize: [60, 65], // Adjusted for the vertical height
+                            iconAnchor: [30, 95] // Pushed up slightly higher to clear the pin
+                        }),
+                        interactive: false,
+                        zIndexOffset: 1000
+                    }).addTo(map);
+                    overlays.push(overlay);
+                }
+            });
+        }
+
+        function updateStats() {
+            const counts = { need: 0, posted: 0, retrieved: 0 };
+            signData.forEach(s => counts[s.status]++);
+            document.getElementById('stats').innerHTML = `
+                <span class="text-red-500">${counts.need} Need</span> • 
+                <span class="text-green-600">${counts.posted} Posted</span> • 
+                <span class="text-slate-500">${counts.retrieved} Retrieved</span>
+            `;
+        }
+
+        const getGroupColor = (name) => {
+            const colors = { 'North': '#ef4444', 'South': '#10b981', 'East': '#f59e0b', 'West': '#8b5cf6' };
+            return colors[name] || '#64748b';
+        };
+
+        async function loadGroups() {
+            try {
+                const response = await fetch('Missions BBQ Signs - Base map- Groups.csv');
+                const text = await response.text();
+                const lines = text.trim().split(/\r?\n/);
+                for (let i = 1; i < lines.length; i++) {
+                    const lastQuoteIndex = lines[i].lastIndexOf('"');
+                    const wktPart = lines[i].substring(1, lastQuoteIndex);
+                    const namePart = lines[i].substring(lastQuoteIndex + 2).trim();
+                    if (wktPart && namePart) {
+                        const coordMatch = wktPart.match(/\(\((.*?)\)\)/);
+                        if (coordMatch) {
+                            const coords = coordMatch[1].split(',').map(pair => {
+                                const [lng, lat] = pair.trim().split(' ').map(Number);
+                                return [lat, lng];
+                            });
+                            L.polygon(coords, {
+                                color: getGroupColor(namePart),
+                                fill: false,
+                                weight: 6,
+                                opacity: 1
+                            }).addTo(map)
+                                .bindTooltip(namePart, { permanent: true, direction: 'center', className: 'polygon-label' });
+                        }
+                    }
+                }
+            } catch (e) { }
+        }
+
+        async function loadSOJ() {
+            try {
+                const response = await fetch('Missions BBQ Signs - Base map- SOJ.txt');
+                const text = await response.text();
+                const [lng, lat] = text.trim().split(/\s+/).map(Number);
+                if (!isNaN(lat)) {
+                    L.marker([lat, lng], { icon: churchIcon }).addTo(map)
+                        .bindPopup(`<div class="p-2 text-center"><h3 class="font-black text-blue-600">SOJ CHURCH</h3></div>`);
+                }
+            } catch (e) { }
+        }
+
+        async function loadSigns() {
+            try {
+                const response = await fetch('Missions BBQ Signs - Base map - Signs.txt');
+                const text = await response.text();
+                const lines = text.trim().split('\n');
+                const allCoords = [];
+                lines.forEach((line, index) => {
+                    const parts = line.trim().split(/\s+/);
+                    if (parts.length >= 2) {
+                        const lng = parseFloat(parts[0]);
+                        const lat = parseFloat(parts[1]);
+                        if (!isNaN(lat)) {
+                            const id = `sign-${lat}-${lng}`;
+                            const saved = savedStatuses[id] || {};
+                            const status = typeof saved === 'string' ? saved : (saved.status || 'need');
+
+                            const sign = {
+                                lat, lng, id, index,
+                                status: status,
+                                right: parseInt(saved.right) || 0,
+                                left: parseInt(saved.left) || 0,
+                                fri_sat: parseInt(saved.fri_sat) || 0,
+                                details: parseInt(saved.details) || 0
+                            };
+
+                            signData.push(sign);
+                            allCoords.push([lat, lng]);
+                            const marker = L.marker([lat, lng], { icon: getMarkerIcon(status), id: id }).addTo(map);
+                            marker.bindPopup(() => createPopupContent(sign), { maxWidth: 220, autoPan: true });
+                            markers.push(marker);
+                        }
+                    }
+                });
+                if (allCoords.length > 0) map.fitBounds(allCoords, { padding: [50, 50] });
+                updateStats();
+                refreshOverlays();
+            } catch (e) {
+                console.error("loadSigns error:", e);
+            }
+        }
+
+        async function loadLastUpdated() {
+            try {
+                const user = window.location.hostname.split('.')[0];
+                const pathParts = window.location.pathname.split('/');
+                const repo = pathParts[1];
+
+                if (user && repo && window.location.hostname.includes('github.io')) {
+                    const response = await fetch(`https://api.github.com/repos/${user}/${repo}/commits/main`);
+                    const data = await response.json();
+                    const date = new Date(data.commit.committer.date);
+                    document.getElementById('last-updated').textContent = `Last Map Sync: ${date.toLocaleString()}`;
+                } else {
+                    document.getElementById('last-updated').textContent = `Local Development Mode`;
+                }
+            } catch (e) {
+                document.getElementById('last-updated').textContent = `Sync Status Unknown`;
+            }
+        }
+
+        function locateUser() {
+            map.locate({ setView: true, maxZoom: 16 });
+        }
+
+        map.on('locationfound', function (e) {
+            if (window.userLocationMarker) {
+                window.userLocationMarker.setLatLng(e.latlng);
+            } else {
+                window.userLocationMarker = L.circleMarker(e.latlng, {
+                    radius: 8,
+                    fillColor: "#3b82f6",
+                    color: "white",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map).bindPopup("You are here");
+            }
+        });
+
+        (async () => {
+            await loadGroups();
+            await loadSOJ();
+            await loadRemoteStatus();
+            await loadSigns();
+            await loadLastUpdated();
+        })();
+    </script>
+</body>
+
+</html>
