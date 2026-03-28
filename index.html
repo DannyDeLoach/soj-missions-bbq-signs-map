@@ -245,8 +245,10 @@
 
                 const marker = markers.find(m => m.options.id === id);
                 if (marker) {
+                    const wasOpen = marker.isPopupOpen();
                     marker.setIcon(getMarkerIcon(newStatus));
                     marker.setPopupContent(createPopupContent(sign));
+                    if (wasOpen) marker.openPopup();
                 }
                 updateStats();
                 if (showOverlays) refreshOverlays();
