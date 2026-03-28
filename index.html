@@ -312,28 +312,28 @@
             const statusColor = sign.status === 'posted' ? 'text-green-600' : (sign.status === 'retrieved' ? 'text-slate-500' : 'text-red-600');
 
             return `
-                <div class="p-0.5 space-y-1 w-64">
+                <div class="p-0.5 space-y-1 w-44">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-0.5">
                         <h3 class="text-slate-800 font-black text-sm uppercase tracking-tight">Sign #${sign.index + 1}</h3>
                         <span class="text-xs font-black uppercase ${statusColor}">${statusLabel}</span>
                     </div>
 
                     <div class="grid grid-cols-1 gap-0.5 text-sm font-bold text-slate-600 border-b border-slate-50 pb-1">
-                        <div class="flex items-center justify-between">
-                            <label>Right Arrow ➔</label>
-                            <input type="number" value="${sign.right}" onchange="updateSignCount('${sign.id}', 'right', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-16 text-center text-base font-black">
+                        <div class="flex items-center justify-end gap-2">
+                            <label class="flex-1">Right Arrow ➔</label>
+                            <input type="number" value="${sign.right}" onchange="updateSignCount('${sign.id}', 'right', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-12 text-center text-base font-black">
                         </div>
-                        <div class="flex items-center justify-between">
-                            <label>Left Arrow ⬅</label>
-                            <input type="number" value="${sign.left}" onchange="updateSignCount('${sign.id}', 'left', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-16 text-center text-base font-black">
+                        <div class="flex items-center justify-end gap-2">
+                            <label class="flex-1">Left Arrow ⬅</label>
+                            <input type="number" value="${sign.left}" onchange="updateSignCount('${sign.id}', 'left', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-12 text-center text-base font-black">
                         </div>
-                        <div class="flex items-center justify-between">
-                            <label>Fri/Sat</label>
-                            <input type="number" value="${sign.fri_sat}" onchange="updateSignCount('${sign.id}', 'fri_sat', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-16 text-center text-base font-black">
+                        <div class="flex items-center justify-end gap-2">
+                            <label class="flex-1">Fri/Sat</label>
+                            <input type="number" value="${sign.fri_sat}" onchange="updateSignCount('${sign.id}', 'fri_sat', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-12 text-center text-base font-black">
                         </div>
-                        <div class="flex items-center justify-between">
-                            <label>Details</label>
-                            <input type="number" value="${sign.details}" onchange="updateSignCount('${sign.id}', 'details', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-16 text-center text-base font-black">
+                        <div class="flex items-center justify-end gap-2">
+                            <label class="flex-1">Details</label>
+                            <input type="number" value="${sign.details}" onchange="updateSignCount('${sign.id}', 'details', this.value)" class="bg-slate-50 border border-slate-200 rounded px-1 py-0 w-12 text-center text-base font-black">
                         </div>
                     </div>
 
