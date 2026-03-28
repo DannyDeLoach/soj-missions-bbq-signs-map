@@ -110,7 +110,7 @@
             <div>
                 <div class="flex items-center gap-2">
                     <h1 class="text-lg font-bold tracking-tight text-slate-800 leading-none">Missions BBQ Signs</h1>
-                    <span class="text-xs font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-md border-2 border-blue-200 shadow-sm uppercase">Build: Mar 27 21:54</span>
+                    <span class="text-xs font-black bg-blue-100 text-blue-700 px-2 py-1 rounded-md border-2 border-blue-200 shadow-sm uppercase">Build: Mar 27 21:55</span>
                     </div>
                 <div id="stats" class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Loading...
                 </div>
@@ -340,21 +340,21 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-1 pt-1">
-                        <div onclick="updateSignStatus('${sign.id}', 'need')" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'need' ? 'bg-red-50 border-red-200' : 'border-transparent hover:bg-slate-50'}">
+                        <div onclick="updateSignStatus('${sign.id}', 'need', event)" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'need' ? 'bg-red-50 border-red-200' : 'border-transparent hover:bg-slate-50'}">
                             <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sign.status === 'need' ? 'border-red-500 bg-red-500' : 'border-slate-300'}">
                                 ${sign.status === 'need' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
                             </div>
                             <span class="text-sm font-black ${sign.status === 'need' ? 'text-red-700' : 'text-slate-600'}">Need Posting</span>
                         </div>
                         
-                        <div onclick="updateSignStatus('${sign.id}', 'posted')" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'posted' ? 'bg-green-50 border-green-200' : 'border-transparent hover:bg-slate-50'}">
+                        <div onclick="updateSignStatus('${sign.id}', 'posted', event)" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'posted' ? 'bg-green-50 border-green-200' : 'border-transparent hover:bg-slate-50'}">
                             <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sign.status === 'posted' ? 'border-green-500 bg-green-500' : 'border-slate-300'}">
                                 ${sign.status === 'posted' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
                             </div>
                             <span class="text-sm font-black ${sign.status === 'posted' ? 'text-green-700' : 'text-slate-600'}">Posted</span>
                         </div>
 
-                        <div onclick="updateSignStatus('${sign.id}', 'retrieved')" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'retrieved' ? 'bg-slate-100 border-slate-300' : 'border-transparent hover:bg-slate-50'}">
+                        <div onclick="updateSignStatus('${sign.id}', 'retrieved', event)" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'retrieved' ? 'bg-slate-100 border-slate-300' : 'border-transparent hover:bg-slate-50'}">
                             <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sign.status === 'retrieved' ? 'border-slate-500 bg-slate-500' : 'border-slate-300'}">
                                 ${sign.status === 'retrieved' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
                             </div>
@@ -562,6 +562,17 @@
             await loadSOJ();
             await loadRemoteStatus();
             await loadSigns();
+            await loadLastUpdated();
+        })();
+    </script>
+</body>
+
+</html>loadLastUpdated();
+        })();
+    </script>
+</body>
+
+</html>       await loadSigns();
             await loadLastUpdated();
         })();
     </script>
