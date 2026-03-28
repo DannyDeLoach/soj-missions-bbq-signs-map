@@ -338,19 +338,38 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-1 pt-1">
-                        <button onclick="updateSignStatus('${sign.id}', 'need')" class="text-left px-2 py-1 text-sm font-black rounded border border-red-100 text-red-700 hover:bg-red-50 flex items-center gap-2">
-                            <div class="w-4 h-4 rounded-full bg-red-500 border border-white"></div> Need Posting
-                        </button>
-                        <button onclick="updateSignStatus('${sign.id}', 'posted')" class="text-left px-2 py-1 text-sm font-black rounded border border-green-100 text-green-700 hover:bg-green-50 flex items-center gap-2">
-                            <div class="w-4 h-4 rounded-full bg-green-500 border border-white"></div> Posted
-                        </button>
-                        <button onclick="updateSignStatus('${sign.id}', 'retrieved')" class="text-left px-2 py-1 text-sm font-black rounded border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center gap-2">
-                            <div class="w-4 h-4 rounded-full bg-slate-400 border border-white"></div> Retrieved & Reset
-                        </button>
+                        <div onclick="updateSignStatus('${sign.id}', 'need')" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'need' ? 'bg-red-50 border-red-200' : 'border-transparent hover:bg-slate-50'}">
+                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sign.status === 'need' ? 'border-red-500 bg-red-500' : 'border-slate-300'}">
+                                ${sign.status === 'need' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+                            </div>
+                            <span class="text-sm font-black ${sign.status === 'need' ? 'text-red-700' : 'text-slate-600'}">Need Posting</span>
+                        </div>
+                        
+                        <div onclick="updateSignStatus('${sign.id}', 'posted')" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'posted' ? 'bg-green-50 border-green-200' : 'border-transparent hover:bg-slate-50'}">
+                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sign.status === 'posted' ? 'border-green-500 bg-green-500' : 'border-slate-300'}">
+                                ${sign.status === 'posted' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+                            </div>
+                            <span class="text-sm font-black ${sign.status === 'posted' ? 'text-green-700' : 'text-slate-600'}">Posted</span>
                         </div>
 
-                        <a href="${googleMapsUrl}" target="_blank" class="inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-black py-2 rounded-md transition-all uppercase tracking-widest shadow-md mt-1">GOOGLE MAPS</a>
+                        <div onclick="updateSignStatus('${sign.id}', 'retrieved')" class="cursor-pointer flex items-center gap-2 p-2 rounded-md border ${sign.status === 'retrieved' ? 'bg-slate-100 border-slate-300' : 'border-transparent hover:bg-slate-50'}">
+                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sign.status === 'retrieved' ? 'border-slate-500 bg-slate-500' : 'border-slate-300'}">
+                                ${sign.status === 'retrieved' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+                            </div>
+                            <span class="text-sm font-black ${sign.status === 'retrieved' ? 'text-slate-800' : 'text-slate-600'}">Retrieved & Reset</span>
                         </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="map.closePopup()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white text-sm font-black py-2.5 rounded-md shadow-md uppercase tracking-wider">DONE</button>
+                        <a href="${googleMapsUrl}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-md shadow-md flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
             `;
         }
 
